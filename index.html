@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Build It With Charlie — Field Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a2e4a;
+    --navy-light: #243d61;
+    --navy-dark: #111e30;
+    --gold: #c9a84c;
+    --gold-light: #e2c06a;
+    --gold-dim: rgba(201,168,76,0.15);
+    --white: #ffffff;
+    --off-white: #f4f6f9;
+    --text: #2c3e50;
+    --text-light: #7a8a99;
+    --border: #dde3ea;
+    --success: #2ecc71;
+    --warning: #f39c12;
+    --danger: #e74c3c;
+    --card-shadow: 0 2px 16px rgba(26,46,74,0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--off-white);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .app-header {
+    background: var(--navy);
+    padding: 20px 20px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: center; }
+  .app-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--white); }
+  .app-subtitle { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: var(--gold); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 2px; }
+  .header-date { font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 400; }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: var(--navy-dark);
+    padding: 12px 20px;
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--gold);
+  }
+  .stat-item { flex: 1; text-align: center; }
+  .stat-item:not(:last-child) { border-right: 1px solid rgba(255,255,255,0.1); }
+  .stat-num { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; color: var(--gold); line-height: 1; }
+  .stat-label { font-size: 9px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+
+  /* NAV TABS */
+  .nav-tabs {
+    display: flex;
+    background: var(--white);
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 72px;
+    z-index: 99;
+  }
+  .nav-tab {
+    flex: 1;
+    padding: 12px 4px 10px;
+    text-align: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .nav-tab.active { color: var(--navy); border-bottom-color: var(--gold); }
+  .nav-tab .tab-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+
+  /* SECTIONS */
+  .section { display: none; padding: 16px; }
+  .section.active { display: block; }
+
+  /* SECTION HEADER */
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .section-title { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy); letter-spacing: 0.05em; text-transform: uppercase; }
+  .btn-add {
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+  }
+  .btn-add:active { background: var(--navy-light); }
+  .btn-add-gold { background: var(--gold); color: var(--navy); }
+  .btn-add-gold:active { background: var(--gold-light); }
+
+  /* CARDS */
+  .card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: var(--card-shadow);
+    border-left: 4px solid var(--border);
+    position: relative;
+    transition: transform 0.15s;
+  }
+  .card:active { transform: scale(0.99); }
+  .card.status-lead { border-left-color: var(--gold); }
+  .card.status-active { border-left-color: var(--success); }
+  .card.status-pending { border-left-color: var(--warning); }
+  .card.status-completed { border-left-color: var(--text-light); }
+
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .card-name { font-weight: 600; font-size: 15px; color: var(--navy); line-height: 1.2; }
+  .card-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    margin-left: 8px;
+    flex-shrink: 0;
+  }
+  .badge-lead { background: var(--gold-dim); color: #8a6a1a; }
+  .badge-active { background: rgba(46,204,113,0.12); color: #1a7a40; }
+  .badge-pending { background: rgba(243,156,18,0.12); color: #8a5a00; }
+  .badge-completed { background: rgba(122,138,153,0.12); color: var(--text-light); }
+  .badge-estimate { background: rgba(26,46,74,0.08); color: var(--navy); }
+
+  .card-detail { font-size: 12px; color: var(--text-light); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+  .card-detail span { font-size: 13px; }
+
+  .card-actions { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .btn-sm {
+    flex: 1;
+    padding: 7px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .btn-sm:active { background: var(--off-white); }
+  .btn-sm.primary { background: var(--navy); color: var(--white); border-color: var(--navy); }
+  .btn-sm.danger { color: var(--danger); border-color: rgba(231,76,60,0.3); }
+
+  /* NOTE CARDS */
+  .note-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: var(--card-shadow);
+    border-top: 3px solid var(--gold);
+  }
+  .note-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .note-project { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.08em; }
+  .note-date { font-size: 11px; color: var(--text-light); }
+  .note-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .note-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .btn-delete { background: none; border: none; color: var(--text-light); font-size: 16px; cursor: pointer; padding: 4px; }
+
+  /* EXPENSE CARDS */
+  .expense-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .expense-icon { width: 42px; height: 42px; border-radius: 10px; background: var(--gold-dim); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .expense-info { flex: 1; }
+  .expense-desc { font-weight: 600; font-size: 14px; color: var(--navy); }
+  .expense-meta { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+  .expense-amount { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: var(--navy); }
+  .expense-amount.income { color: var(--success); }
+
+  /* TOTALS BAR */
+  .totals-bar {
+    background: var(--navy);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .total-item { text-align: center; }
+  .total-label { font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; }
+  .total-value { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; margin-top: 2px; }
+  .total-value.green { color: var(--success); }
+  .total-value.gold { color: var(--gold); }
+  .total-value.red { color: #ff6b6b; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,20,35,0.7);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px 40px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--navy); margin-bottom: 20px; }
+
+  /* FORM */
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; display: block; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--white);
+    appearance: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--navy);
+  }
+  .form-textarea { min-height: 100px; resize: vertical; }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-group { flex: 1; }
+
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+  }
+  .btn-submit:active { background: var(--navy-light); }
+  .btn-cancel {
+    width: 100%;
+    padding: 12px;
+    background: none;
+    color: var(--text-light);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text-light); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-text { font-size: 14px; line-height: 1.5; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 0 12px;
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(26,46,74,0.08);
+  }
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 4px;
+    transition: all 0.15s;
+  }
+  .bottom-nav-item .nav-icon { font-size: 22px; transition: transform 0.15s; }
+  .bottom-nav-item .nav-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-light); }
+  .bottom-nav-item.active .nav-icon { transform: scale(1.1); }
+  .bottom-nav-item.active .nav-label { color: var(--navy); }
+  .bottom-nav-item.active::after { content: ''; display: block; width: 20px; height: 3px; background: var(--gold); border-radius: 2px; margin-top: 2px; }
+
+  .filter-row { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; }
+  .filter-chip {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    color: var(--text-light);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .filter-chip.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+
+  .phase-progress { margin-top: 10px; }
+  .phase-label { font-size: 11px; color: var(--text-light); margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.3s; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-top">
+    <div>
+      <div class="app-title">Build It With Charlie</div>
+      <div class="app-subtitle">Field Tracker</div>
+    </div>
+    <div class="header-date" id="headerDate"></div>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num" id="statLeads">0</div>
+    <div class="stat-label">Leads</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="statActive">0</div>
+    <div class="stat-label">Active</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="statNotes">0</div>
+    <div class="stat-label">Notes</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="statRevenue">$0</div>
+    <div class="stat-label">Revenue</div>
+  </div>
+</div>
+
+<!-- SECTIONS -->
+<div class="section active" id="section-leads">
+  <div class="section-header">
+    <div class="section-title">Leads & Contacts</div>
+    <button class="btn-add btn-add-gold" onclick="openModal('leadModal')">+ Add Lead</button>
+  </div>
+  <div class="filter-row">
+    <div class="filter-chip active" onclick="filterLeads('all', this)">All</div>
+    <div class="filter-chip" onclick="filterLeads('lead', this)">New Leads</div>
+    <div class="filter-chip" onclick="filterLeads('pending', this)">Pending</div>
+    <div class="filter-chip" onclick="filterLeads('active', this)">Active</div>
+    <div class="filter-chip" onclick="filterLeads('completed', this)">Completed</div>
+  </div>
+  <div id="leadsList"></div>
+</div>
+
+<div class="section" id="section-projects">
+  <div class="section-header">
+    <div class="section-title">Projects</div>
+    <button class="btn-add" onclick="openModal('projectModal')">+ New Project</button>
+  </div>
+  <div id="projectsList"></div>
+</div>
+
+<div class="section" id="section-notes">
+  <div class="section-header">
+    <div class="section-title">Site Notes</div>
+    <button class="btn-add btn-add-gold" onclick="openModal('noteModal')">+ Quick Note</button>
+  </div>
+  <div id="notesList"></div>
+</div>
+
+<div class="section" id="section-money">
+  <div class="section-header">
+    <div class="section-title">Money</div>
+    <button class="btn-add" onclick="openModal('expenseModal')">+ Add Entry</button>
+  </div>
+  <div class="totals-bar">
+    <div class="total-item">
+      <div class="total-label">Income</div>
+      <div class="total-value green" id="totalIncome">$0</div>
+    </div>
+    <div class="total-item">
+      <div class="total-label">Expenses</div>
+      <div class="total-value red" id="totalExpenses">$0</div>
+    </div>
+    <div class="total-item">
+      <div class="total-label">Net</div>
+      <div class="total-value gold" id="totalNet">$0</div>
+    </div>
+  </div>
+  <div id="expensesList"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="bottom-nav-item active" onclick="switchTab('leads', this)">
+    <span class="nav-icon">👥</span>
+    <span class="nav-label">Leads</span>
+  </div>
+  <div class="bottom-nav-item" onclick="switchTab('projects', this)">
+    <span class="nav-icon">🏗️</span>
+    <span class="nav-label">Projects</span>
+  </div>
+  <div class="bottom-nav-item" onclick="switchTab('notes', this)">
+    <span class="nav-icon">📝</span>
+    <span class="nav-label">Notes</span>
+  </div>
+  <div class="bottom-nav-item" onclick="switchTab('money', this)">
+    <span class="nav-icon">💰</span>
+    <span class="nav-label">Money</span>
+  </div>
+</div>
+
+<!-- LEAD MODAL -->
+<div class="modal-overlay" id="leadModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">New Lead</div>
+    <div class="form-group">
+      <label class="form-label">Client Name *</label>
+      <input class="form-input" id="leadName" placeholder="Full name" type="text">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" id="leadPhone" placeholder="608-xxx-xxxx" type="tel">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="leadStatus">
+          <option value="lead">New Lead</option>
+          <option value="pending">Pending Estimate</option>
+          <option value="active">Active Project</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Address / Area</label>
+      <input class="form-input" id="leadAddress" placeholder="Madison area" type="text">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Project Type</label>
+      <select class="form-select" id="leadType">
+        <option value="">Select service...</option>
+        <option>Kitchen Remodel</option>
+        <option>Bathroom Renovation</option>
+        <option>Basement Finishing</option>
+        <option>Deck / Outdoor Living</option>
+        <option>Owner's Rep PM</option>
+        <option>Full Home Renovation</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Est. Budget</label>
+        <input class="form-input" id="leadBudget" placeholder="$0" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Source</label>
+        <select class="form-select" id="leadSource">
+          <option>Referral</option>
+          <option>Nextdoor</option>
+          <option>Houzz</option>
+          <option>Google</option>
+          <option>Realtor</option>
+          <option>Website</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" id="leadNotes" placeholder="Project details, client needs, follow-up reminders..."></textarea>
+    </div>
+    <button class="btn-submit" onclick="saveLead()">Save Lead</button>
+    <button class="btn-cancel" onclick="closeModal('leadModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- PROJECT MODAL -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">New Project</div>
+    <div class="form-group">
+      <label class="form-label">Project Name *</label>
+      <input class="form-input" id="projName" placeholder="e.g. Smith Kitchen Remodel" type="text">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Client Name</label>
+      <input class="form-input" id="projClient" placeholder="Client full name" type="text">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Address</label>
+      <input class="form-input" id="projAddress" placeholder="Project address" type="text">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Contract Value</label>
+        <input class="form-input" id="projValue" placeholder="$0" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phase</label>
+        <select class="form-select" id="projPhase">
+          <option value="0">Planning</option>
+          <option value="20">Demo</option>
+          <option value="40">Rough Work</option>
+          <option value="60">Finishing</option>
+          <option value="80">Final Touches</option>
+          <option value="100">Complete</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Start Date</label>
+        <input class="form-input" id="projStart" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Est. End Date</label>
+        <input class="form-input" id="projEnd" type="date">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" id="projNotes" placeholder="Scope of work, special requirements..."></textarea>
+    </div>
+    <button class="btn-submit" onclick="saveProject()">Save Project</button>
+    <button class="btn-cancel" onclick="closeModal('projectModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- NOTE MODAL -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Quick Site Note</div>
+    <div class="form-group">
+      <label class="form-label">Project / Location</label>
+      <input class="form-input" id="noteProject" placeholder="Which project or site?" type="text">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note *</label>
+      <textarea class="form-textarea" id="noteText" placeholder="What do you need to remember? Materials needed, issues found, client requests, measurements..." style="min-height:140px;"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <select class="form-select" id="noteCategory">
+        <option>Site Observation</option>
+        <option>Client Request</option>
+        <option>Materials Needed</option>
+        <option>Issue / Problem</option>
+        <option>Measurement</option>
+        <option>Follow-up Required</option>
+        <option>General</option>
+      </select>
+    </div>
+    <button class="btn-submit" onclick="saveNote()">Save Note</button>
+    <button class="btn-cancel" onclick="closeModal('noteModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- EXPENSE MODAL -->
+<div class="modal-overlay" id="expenseModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Money Entry</div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-select" id="expType">
+        <option value="income">💰 Income / Payment Received</option>
+        <option value="expense">💸 Expense / Cost</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description *</label>
+      <input class="form-input" id="expDesc" placeholder="What is this for?" type="text">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Amount *</label>
+        <input class="form-input" id="expAmount" placeholder="$0.00" type="number">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="expCategory">
+          <option>Materials</option>
+          <option>Labor / Subs</option>
+          <option>Tools / Equipment</option>
+          <option>Vehicle / Gas</option>
+          <option>Insurance</option>
+          <option>Marketing</option>
+          <option>Software</option>
+          <option>Client Payment</option>
+          <option>Deposit Received</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Project</label>
+      <input class="form-input" id="expProject" placeholder="Which project? (optional)" type="text">
+    </div>
+    <button class="btn-submit" onclick="saveExpense()">Save Entry</button>
+    <button class="btn-cancel" onclick="closeModal('expenseModal')">Cancel</button>
+  </div>
+</div>
+
+<script>
+  // Data store
+  let data = {
+    leads: [],
+    projects: [],
+    notes: [],
+    expenses: []
+  };
+
+  // Load from localStorage if available
+  try {
+    const saved = localStorage.getItem('biwc_tracker');
+    if (saved) data = JSON.parse(saved);
+  } catch(e) {}
+
+  function save() {
+    try { localStorage.setItem('biwc_tracker', JSON.stringify(data)); } catch(e) {}
+    updateStats();
+  }
+
+  // Date
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now = new Date();
+  document.getElementById('headerDate').textContent = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+
+  // Tab switching
+  function switchTab(tab, el) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('section-' + tab).classList.add('active');
+    el.classList.add('active');
+  }
+
+  // Modal
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+  });
+
+  // Stats
+  function updateStats() {
+    const leads = data.leads.filter(l => l.status === 'lead').length;
+    const active = data.leads.filter(l => l.status === 'active').length + data.projects.length;
+    const notes = data.notes.length;
+    const revenue = data.expenses.filter(e => e.type === 'income').reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+    document.getElementById('statLeads').textContent = leads;
+    document.getElementById('statActive').textContent = active;
+    document.getElementById('statNotes').textContent = notes;
+    document.getElementById('statRevenue').textContent = revenue >= 1000 ? '$' + (revenue/1000).toFixed(1) + 'k' : '$' + revenue.toFixed(0);
+    renderLeads();
+    renderProjects();
+    renderNotes();
+    renderExpenses();
+  }
+
+  // ── LEADS ──
+  let currentFilter = 'all';
+  function filterLeads(f, el) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderLeads();
+  }
+
+  function renderLeads() {
+    const list = document.getElementById('leadsList');
+    let leads = data.leads;
+    if (currentFilter !== 'all') leads = leads.filter(l => l.status === currentFilter);
+    if (!leads.length) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No leads yet.<br>Add your first contact!</div></div>`;
+      return;
+    }
+    const statusLabel = { lead: 'New Lead', pending: 'Pending', active: 'Active', completed: 'Done' };
+    const statusBadge = { lead: 'badge-lead', pending: 'badge-pending', active: 'badge-active', completed: 'badge-completed' };
+    list.innerHTML = leads.map((l, i) => `
+      <div class="card status-${l.status}">
+        <div class="card-header">
+          <div class="card-name">${l.name}</div>
+          <span class="card-badge ${statusBadge[l.status]}">${statusLabel[l.status]}</span>
+        </div>
+        ${l.type ? `<div class="card-detail"><span>🔨</span>${l.type}</div>` : ''}
+        ${l.address ? `<div class="card-detail"><span>📍</span>${l.address}</div>` : ''}
+        ${l.phone ? `<div class="card-detail"><span>📞</span>${l.phone}</div>` : ''}
+        ${l.budget ? `<div class="card-detail"><span>💵</span>${l.budget} · via ${l.source || 'Unknown'}</div>` : ''}
+        ${l.notes ? `<div class="card-detail" style="margin-top:6px;color:#3a4a5a;font-size:13px;">${l.notes}</div>` : ''}
+        <div class="card-actions">
+          <button class="btn-sm" onclick="updateLeadStatus(${data.leads.indexOf(l)})">Update Status</button>
+          ${l.phone ? `<a href="tel:${l.phone}" class="btn-sm primary" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">📞 Call</a>` : ''}
+          <button class="btn-sm danger" onclick="deleteLead(${data.leads.indexOf(l)})">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function saveLead() {
+    const name = document.getElementById('leadName').value.trim();
+    if (!name) { alert('Please enter a client name'); return; }
+    data.leads.push({
+      name, phone: document.getElementById('leadPhone').value,
+      status: document.getElementById('leadStatus').value,
+      address: document.getElementById('leadAddress').value,
+      type: document.getElementById('leadType').value,
+      budget: document.getElementById('leadBudget').value,
+      source: document.getElementById('leadSource').value,
+      notes: document.getElementById('leadNotes').value,
+      date: new Date().toISOString()
+    });
+    ['leadName','leadPhone','leadAddress','leadBudget','leadNotes'].forEach(id => document.getElementById(id).value = '');
+    save(); closeModal('leadModal');
+  }
+
+  function updateLeadStatus(i) {
+    const statuses = ['lead','pending','active','completed'];
+    const cur = statuses.indexOf(data.leads[i].status);
+    data.leads[i].status = statuses[(cur + 1) % statuses.length];
+    save();
+  }
+
+  function deleteLead(i) {
+    if (confirm('Delete this lead?')) { data.leads.splice(i, 1); save(); }
+  }
+
+  // ── PROJECTS ──
+  function renderProjects() {
+    const list = document.getElementById('projectsList');
+    if (!data.projects.length) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">🏗️</div><div class="empty-text">No active projects yet.<br>Convert a lead or add a project!</div></div>`;
+      return;
+    }
+    const phaseNames = {'0':'Planning','20':'Demo','40':'Rough Work','60':'Finishing','80':'Final Touches','100':'Complete'};
+    list.innerHTML = data.projects.map((p, i) => `
+      <div class="card status-active">
+        <div class="card-header">
+          <div class="card-name">${p.name}</div>
+          ${p.value ? `<span class="card-badge badge-estimate">${p.value}</span>` : ''}
+        </div>
+        ${p.client ? `<div class="card-detail"><span>👤</span>${p.client}</div>` : ''}
+        ${p.address ? `<div class="card-detail"><span>📍</span>${p.address}</div>` : ''}
+        ${p.start ? `<div class="card-detail"><span>📅</span>${p.start}${p.end ? ' → ' + p.end : ''}</div>` : ''}
+        <div class="phase-progress">
+          <div class="phase-label"><span>Phase: ${phaseNames[p.phase] || p.phase + '%'}</span><span>${p.phase}%</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${p.phase}%"></div></div>
+        </div>
+        ${p.notes ? `<div class="card-detail" style="margin-top:8px;color:#3a4a5a;font-size:13px;">${p.notes}</div>` : ''}
+        <div class="card-actions">
+          <button class="btn-sm primary" onclick="advancePhase(${i})">Next Phase</button>
+          <button class="btn-sm" onclick="addNoteForProject('${p.name}')">+ Note</button>
+          <button class="btn-sm danger" onclick="deleteProject(${i})">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function saveProject() {
+    const name = document.getElementById('projName').value.trim();
+    if (!name) { alert('Please enter a project name'); return; }
+    data.projects.push({
+      name, client: document.getElementById('projClient').value,
+      address: document.getElementById('projAddress').value,
+      value: document.getElementById('projValue').value,
+      phase: document.getElementById('projPhase').value,
+      start: document.getElementById('projStart').value,
+      end: document.getElementById('projEnd').value,
+      notes: document.getElementById('projNotes').value,
+      date: new Date().toISOString()
+    });
+    ['projName','projClient','projAddress','projValue','projNotes','projStart','projEnd'].forEach(id => document.getElementById(id).value = '');
+    save(); closeModal('projectModal');
+  }
+
+  function advancePhase(i) {
+    const phases = [0,20,40,60,80,100];
+    const cur = phases.indexOf(parseInt(data.projects[i].phase));
+    if (cur < phases.length - 1) { data.projects[i].phase = phases[cur + 1]; save(); }
+    else alert('Project is already complete!');
+  }
+
+  function deleteProject(i) {
+    if (confirm('Delete this project?')) { data.projects.splice(i, 1); save(); }
+  }
+
+  // ── NOTES ──
+  function addNoteForProject(name) {
+    document.getElementById('noteProject').value = name;
+    openModal('noteModal');
+  }
+
+  function renderNotes() {
+    const list = document.getElementById('notesList');
+    if (!data.notes.length) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-text">No notes yet.<br>Tap + to add a quick site note!</div></div>`;
+      return;
+    }
+    const sorted = [...data.notes].reverse();
+    list.innerHTML = sorted.map((n, i) => {
+      const d = new Date(n.date);
+      const dateStr = `${months[d.getMonth()]} ${d.getDate()}, ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+      return `
+        <div class="note-card">
+          <div class="note-meta">
+            <div class="note-project">${n.project || 'General'} · ${n.category || ''}</div>
+            <div class="note-date">${dateStr}</div>
+          </div>
+          <div class="note-text">${n.text}</div>
+          <div class="note-actions">
+            <button class="btn-delete" onclick="deleteNote(${data.notes.indexOf(n)})">🗑️</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function saveNote() {
+    const text = document.getElementById('noteText').value.trim();
+    if (!text) { alert('Please enter a note'); return; }
+    data.notes.push({
+      project: document.getElementById('noteProject').value,
+      text, category: document.getElementById('noteCategory').value,
+      date: new Date().toISOString()
+    });
+    ['noteProject','noteText'].forEach(id => document.getElementById(id).value = '');
+    save(); closeModal('noteModal');
+  }
+
+  function deleteNote(i) {
+    if (confirm('Delete this note?')) { data.notes.splice(i, 1); save(); }
+  }
+
+  // ── EXPENSES ──
+  function renderExpenses() {
+    const list = document.getElementById('expensesList');
+    const income = data.expenses.filter(e => e.type === 'income').reduce((s,e) => s + parseFloat(e.amount||0), 0);
+    const expenses = data.expenses.filter(e => e.type === 'expense').reduce((s,e) => s + parseFloat(e.amount||0), 0);
+    const net = income - expenses;
+    document.getElementById('totalIncome').textContent = '$' + income.toLocaleString('en-US', {minimumFractionDigits:0});
+    document.getElementById('totalExpenses').textContent = '$' + expenses.toLocaleString('en-US', {minimumFractionDigits:0});
+    document.getElementById('totalNet').textContent = (net >= 0 ? '+' : '') + '$' + net.toLocaleString('en-US', {minimumFractionDigits:0});
+
+    if (!data.expenses.length) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">No entries yet.<br>Track income and expenses here!</div></div>`;
+      return;
+    }
+    const catIcons = { 'Materials':'🪵', 'Labor / Subs':'👷', 'Tools / Equipment':'🔧', 'Vehicle / Gas':'🚗', 'Insurance':'🛡️', 'Marketing':'📢', 'Software':'💻', 'Client Payment':'💵', 'Deposit Received':'🤝', 'Other':'📋' };
+    const sorted = [...data.expenses].reverse();
+    list.innerHTML = sorted.map((e, i) => {
+      const d = new Date(e.date);
+      const dateStr = `${months[d.getMonth()]} ${d.getDate()}`;
+      return `
+        <div class="expense-card">
+          <div class="expense-icon">${catIcons[e.category] || '📋'}</div>
+          <div class="expense-info">
+            <div class="expense-desc">${e.desc}</div>
+            <div class="expense-meta">${e.category}${e.project ? ' · ' + e.project : ''} · ${dateStr}</div>
+          </div>
+          <div>
+            <div class="expense-amount ${e.type === 'income' ? 'income' : ''}">${e.type === 'income' ? '+' : '-'}$${parseFloat(e.amount).toLocaleString()}</div>
+            <button class="btn-delete" style="float:right;margin-top:4px;" onclick="deleteExpense(${data.expenses.indexOf(e)})">🗑️</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function saveExpense() {
+    const desc = document.getElementById('expDesc').value.trim();
+    const amount = document.getElementById('expAmount').value;
+    if (!desc || !amount) { alert('Please fill in description and amount'); return; }
+    data.expenses.push({
+      type: document.getElementById('expType').value,
+      desc, amount: parseFloat(amount),
+      category: document.getElementById('expCategory').value,
+      project: document.getElementById('expProject').value,
+      date: new Date().toISOString()
+    });
+    ['expDesc','expAmount','expProject'].forEach(id => document.getElementById(id).value = '');
+    save(); closeModal('expenseModal');
+  }
+
+  function deleteExpense(i) {
+    if (confirm('Delete this entry?')) { data.expenses.splice(i, 1); save(); }
+  }
+
+  // Init
+  updateStats();
+</script>
+</body>
+</html>
